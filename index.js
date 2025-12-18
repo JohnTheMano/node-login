@@ -11,16 +11,27 @@ mongoose.connect("mongodb://atlas-sql-694417567e396c09274545a4-5obtd.a.query.mon
 .catch(err => console.error("error de conexión",err) );
 
 
-const usuarioPrueba = {
-    usuario: "Jason",
-    password: "" // se llena con hash
-};
+
+const usuarioSchema = mongoose.Schema({
+    usuario: {type : String, required:true, unique:true},
+    password: {type: String, required: true}
+})
+
+const Usuario = mongoose.model("Usuario", usuarioSchema);
+
+
 
 // Generar hash al iniciar el servidor
-bcrypt.hash("Friday" , 10, (err,hash) => {
+bcrypt.hash("Friday" , 10, async(err,hash) => {
     if (err) throw err;
-    usuarioPrueba.password = hash;
-    console.log("Hash generado para usuario de prueba", hash)
+
+    const usuario = new Usuario({
+        usuario: "Jason",
+        password: hash // se llena con hash
+    });
+
+    await usuario.save().catch(err => console.log("usuario ya existe"));
+    console.log("usuario de prueba guardado en  MongoDB")
 });
 
 
