@@ -1,7 +1,15 @@
-
+const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const express = require("express");
+
 const app = express();
+app.use(express.json());
+
+mongoose.connect("mongodb://atlas-sql-694417567e396c09274545a4-5obtd.a.query.mongodb.net/sample_mflix?ssl=true&authSource=admin",{
+})
+.then(() =>  console.log("Conectado a MongoDB Atlas")) 
+.catch(err => console.error("error de conexión",err) );
+
 
 const usuarioPrueba = {
     usuario: "Jason",
@@ -15,7 +23,7 @@ bcrypt.hash("Friday" , 10, (err,hash) => {
     console.log("Hash generado para usuario de prueba", hash)
 });
 
-app.use(express.json());
+
 
 app.get("/", (req,res) => {
     res.send('servidor funcionando');
