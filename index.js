@@ -5,7 +5,7 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 
-mongoose.connect("mongodb://atlas-sql-694417567e396c09274545a4-5obtd.a.query.mongodb.net/sample_mflix?ssl=true&authSource=admin",{
+mongoose.connect("mongodb+srv://pablolito:moro@cluster0.lldz94w.mongodb.net/aprendiendo-node?appName=Cluster0",{
 })
 .then(() =>  console.log("Conectado a MongoDB Atlas")) 
 .catch(err => console.error("error de conexión",err) );
@@ -44,20 +44,28 @@ app.listen(3000, () =>{
     console.log("Servidor corriendo en 3000");
 });
 
-app.post("/login", (req , res) => {
-    const {usuario , password} = req.body;
-    
-    if (usuario !== usuarioPrueba.usuario) {
-        return res.status(401).json({mensage:"Usuario o contraseña incorrectos"});
-        } 
-        
-    bcrypt.compare(password, usuarioPrueba.password, (err, resultado) => {
-        if (err) return res.status(500).json({mensaje:"Error de servidor"});
+app.post("/login", async (req, res) => {
+    const { usuario, password } = req.body;
+
+    try {
+        // 1. Buscar usuario en MongoDB
+        const user = await Usuario.findOne({ usuario });
+
+        if (!user) {
+            return res.status(401).json({ mensaje: "Usuario o contraseña incorrectos" });
+        }
+
+        // 2. Comparar contraseña con bcrypt
+        const resultado = await bcrypt.compare(password, user.password);
 
         if (resultado) {
-            return res.status(200).json({mensaje: "Login exitoso"});
+            return res.status(200).json({ mensaje: "Login exitoso" });
         } else {
-            return res.status(401).json({mensaje: "Usuario o contraseña incorrectos"});
+            return res.status(401).json({ mensaje: "Usuario o contraseña incorrectos" });
         }
-        });
-} );
+
+    } catch (error) {
+        return res.status(500).json({ mensaje: "Error de servidor" });
+    }
+});
+
