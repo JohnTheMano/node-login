@@ -39,12 +39,58 @@ bcrypt.hash("Friday", 10, async (err, hash) => {
     console.log("usuario de prueba guardado en MongoDB");
 });
 
+bcrypt.hash("Profesor123", 10, async (err, hash) => {
+    if (err) throw err;
 
+    const usuario = new Usuario({
+        usuario: "Profesor1",
+        password: hash,
+        role: "profesor"
+    });
+
+    await usuario.save().catch(err => console.log("usuario ya existe"));
+    console.log("usuario profesor guardado en MongoDB");
+});
+
+
+const verificarToken = (rolesPermitidos = []) => {
+    return (req, res, next) => {
+        const authHeader = req.headers["authorization"];
+        const token = authHeader && authHeader.split(" ")[1];
+
+        if (!token) {
+            return res.status(401).json({ mensaje: "No se proporcionó token" });
+        }
+
+        try {
+            const usuario = jwt.verify(token, JWT_SECRET);
+            req.usuario = usuario; // guardamos los datos del usuario en req
+
+            if (rolesPermitidos.length && !rolesPermitidos.includes(usuario.role)) {
+                return res.status(403).json({ mensaje: "No tienes permiso para esta acción" });
+            }
+
+            next(); // continuar con la ruta
+        } catch (error) {
+            return res.status(403).json({ mensaje: "Token inválido o expirado" });
+        }
+    }
+};
 
 
 app.get("/", (req,res) => {
     res.send('servidor funcionando');
 })
+
+app.get("/staff/alumnos", verificarToken(["staff"]), (req, res) => {
+    res.json({ mensaje: `Hola ${req.usuario.usuario}, puedes ver todos los alumnos` });
+});
+
+app.get("/profesor/alumnos", verificarToken(["profesor"]), (req, res) => {
+    res.json({ mensaje: `Hola ${req.usuario.usuario}, puedes ver solo tus alumnos` });
+});
+
+
 
 app.listen(3000, () =>{
     console.log("Servidor corriendo en 3000");
